@@ -1,18 +1,19 @@
+
 import type { NextPage } from "next";
 import Head from "next/head";
-import { HomeView } from "../views";
+import { PuffView } from "../views/puff";
 
 const Home: NextPage = (props) => {
   return (
     <div>
       <Head>
-        <title>Solana Diamond Woman</title>
+        <title>Puff Dog NFT Collection</title>
         <meta
           name="description"
-          content="Solana Scaffold"
+          content="Puff Dog NFT Collection on Solana"
         />
       </Head>
-      <HomeView />
+      <PuffView />
     </div>
   );
 };

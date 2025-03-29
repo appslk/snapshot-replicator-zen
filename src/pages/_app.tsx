@@ -1,3 +1,4 @@
+
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { FC } from 'react';
@@ -13,16 +14,16 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
     return (
         <div>
           <Head>
-            <title>Solana Diamond Woman</title>
+            <title>Puff Dog NFT Collection</title>
           </Head>
 
           <ContextProvider>
-            <div className="flex flex-col h-screen">
+            <div className="flex flex-col min-h-screen">
               <Notifications />
-              <AppBar/>
               <ContentContainer>
                 <Component {...pageProps} />
               </ContentContainer>
+              <Footer />
             </div>
           </ContextProvider>
         </div>

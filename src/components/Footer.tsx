@@ -1,38 +1,34 @@
+
 import { FC } from 'react';
+import { Twitter, Github, MessageCircle, Instagram, Youtube, Globe } from "lucide-react";
 
 export const Footer: FC = () => {
-    const images = [
-        "https://dwsolassets.pages.dev/imgs/1.png",
-        "https://dwsolassets.pages.dev/imgs/2.png",
-        "https://dwsolassets.pages.dev/imgs/3.png",
-        "https://dwsolassets.pages.dev/imgs/4.png",
-        "https://dwsolassets.pages.dev/imgs/5.png",
-        "https://dwsolassets.pages.dev/imgs/6.png",
-        "https://dwsolassets.pages.dev/imgs/7.png",
-        "https://dwsolassets.pages.dev/imgs/8.png",
-        "https://dwsolassets.pages.dev/imgs/9.png",
-        "https://dwsolassets.pages.dev/imgs/10.png",
-        "https://dwsolassets.pages.dev/imgs/11.png",
-        "https://dwsolassets.pages.dev/imgs/12.png",
-        "https://dwsolassets.pages.dev/imgs/13.png",
-        "https://dwsolassets.pages.dev/imgs/14.png",
-        "https://dwsolassets.pages.dev/imgs/15.png",
-        "https://dwsolassets.pages.dev/imgs/16.png",
-        "https://dwsolassets.pages.dev/imgs/17.png",
-        "https://dwsolassets.pages.dev/imgs/18.png",
-    ];
-
-    return (
-        <div className="footer-container w-full overflow-hidden -mt-4">
-            <div className="slider">
-                <div className="slide-track2">
-                    {images.map((src, index) => (
-                        <div className="slide" key={index}>
-                            <img className="carouselIMG" src={src} alt={`img-${index}`} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <footer className="py-8 bg-black text-white border-t border-gray-800">
+      <div className="container mx-auto px-4 flex justify-center space-x-6">
+        <a href="#" className="hover:text-yellow-400">
+          <Twitter size={20} />
+        </a>
+        <a href="#" className="hover:text-yellow-400">
+          <Github size={20} />
+        </a>
+        <a href="#" className="hover:text-yellow-400">
+          <MessageCircle size={20} />
+        </a>
+        <a href="#" className="hover:text-yellow-400">
+          <Instagram size={20} />
+        </a>
+        <a href="#" className="hover:text-yellow-400">
+          <Youtube size={20} />
+        </a>
+        <a href="#" className="hover:text-yellow-400">
+          <Globe size={20} />
+        </a>
+      </div>
+      
+      <div className="text-center mt-6 text-sm text-gray-400">
+        &copy; 2023 Puff Dog NFT Collection. All rights reserved.
+      </div>
+    </footer>
+  );
 };
