@@ -11,10 +11,10 @@ export const NavBar: FC = () => {
         <Link href="/" passHref>
           <div className="cursor-pointer flex items-center">
             <Image 
-              src="/lovable-uploads/e4bf8dd2-78e0-4b6a-9052-3c866c8dea5e.png" 
+              src="/lovable-uploads/0f8db977-5a82-4431-9e8a-98af137f02c4.png" 
               alt="Puff Dog Logo" 
-              width={150} 
-              height={50} 
+              width={200} 
+              height={70} 
             />
           </div>
         </Link>
@@ -23,22 +23,22 @@ export const NavBar: FC = () => {
       <div className="navbar-center hidden lg:flex">
         <ul className="flex space-x-8">
           <li>
-            <Link href="/" className="font-medium hover:text-yellow-400">
+            <Link href="/" className="font-vag hover:text-yellow-400">
               HOME
             </Link>
           </li>
           <li>
-            <Link href="#mint" className="font-medium hover:text-yellow-400">
+            <Link href="#mint" className="font-vag hover:text-yellow-400">
               MINT
             </Link>
           </li>
           <li>
-            <Link href="#roadmap" className="font-medium hover:text-yellow-400">
+            <Link href="#roadmap" className="font-vag hover:text-yellow-400">
               ROADMAP
             </Link>
           </li>
           <li>
-            <Link href="#faq" className="font-medium hover:text-yellow-400">
+            <Link href="#faq" className="font-vag hover:text-yellow-400">
               FAQ
             </Link>
           </li>
@@ -46,7 +46,7 @@ export const NavBar: FC = () => {
       </div>
       
       <div className="navbar-end">
-        <WalletMultiButton className="btn rounded-full bg-transparent border border-white hover:bg-gray-800 text-sm px-6">
+        <WalletMultiButton className="btn rounded-full bg-transparent border border-white hover:bg-gray-800 text-sm px-6 font-vag">
           Connect
         </WalletMultiButton>
       </div>

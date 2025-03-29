@@ -1,9 +1,15 @@
+
 module.exports = {
   mode: "jit",
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   darkMode: "media",
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'vag': ['"VAG Primer"', 'sans-serif'],
+        'arco': ['"ARCO"', 'sans-serif'],
+      },
+    },
   },
   plugins: [
     require('daisyui'),

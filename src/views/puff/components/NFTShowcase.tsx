@@ -1,34 +1,37 @@
 
 import { FC } from 'react';
+import Image from 'next/image';
 
 export const NFTShowcase: FC = () => {
+  // Sample NFT data - in a real app, this would come from an API or database
   const nfts = [
-    "/imgs/nft1.png",
-    "/imgs/nft2.png",
-    "/imgs/nft3.png",
-    "/imgs/nft4.png",
-    "/imgs/nft5.png"
+    { id: 1, name: 'Puff Dog #001', image: '/lovable-uploads/0f8db977-5a82-4431-9e8a-98af137f02c4.png' },
+    { id: 2, name: 'Puff Dog #002', image: '/lovable-uploads/0f8db977-5a82-4431-9e8a-98af137f02c4.png' },
+    { id: 3, name: 'Puff Dog #003', image: '/lovable-uploads/0f8db977-5a82-4431-9e8a-98af137f02c4.png' },
+    { id: 4, name: 'Puff Dog #004', image: '/lovable-uploads/0f8db977-5a82-4431-9e8a-98af137f02c4.png' },
   ];
-
+  
   return (
-    <section className="w-full bg-black py-8">
-      <div className="container mx-auto">
-        <div className="flex overflow-x-auto gap-4 justify-center">
-          {nfts.map((nft, index) => (
-            <div key={index} className="flex-shrink-0 w-56 h-64">
-              <img 
-                src={nft} 
-                alt={`Puff Dog NFT ${index+1}`} 
-                className="w-full h-full object-cover rounded-lg"
-              />
+    <section className="w-full py-16 bg-gray-800">
+      <div className="container mx-auto text-center">
+        <h2 className="text-4xl font-arco mb-12 text-white uppercase">NFT Collection</h2>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-6xl mx-auto px-4">
+          {nfts.map((nft) => (
+            <div key={nft.id} className="bg-black rounded-lg overflow-hidden">
+              <div className="relative aspect-square">
+                <Image 
+                  src={nft.image} 
+                  alt={nft.name} 
+                  fill={true}
+                  style={{ objectFit: 'cover' }}
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-xl font-arco text-white">{nft.name}</h3>
+              </div>
             </div>
           ))}
-        </div>
-        
-        <div className="text-center mt-8">
-          <button className="bg-yellow-500 text-black font-bold py-2 px-6 rounded-md hover:bg-yellow-400 transition">
-            Mint Now
-          </button>
         </div>
       </div>
     </section>

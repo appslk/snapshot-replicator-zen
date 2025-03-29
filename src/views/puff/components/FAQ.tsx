@@ -12,14 +12,14 @@ const FAQItem: FC<FAQItemProps> = ({ question, children }) => {
   return (
     <div className="border-b border-gray-200 py-4">
       <button 
-        className="flex justify-between items-center w-full text-left font-medium text-lg"
+        className="flex justify-between items-center w-full text-left font-arco text-lg text-black"
         onClick={() => setIsOpen(!isOpen)}
       >
         {question}
         <span className="ml-6 flex-shrink-0">{isOpen ? '-' : '+'}</span>
       </button>
       {isOpen && (
-        <div className="mt-2">
+        <div className="mt-2 font-vag text-black">
           {children}
         </div>
       )}
@@ -29,10 +29,10 @@ const FAQItem: FC<FAQItemProps> = ({ question, children }) => {
 
 export const FAQ: FC = () => {
   return (
-    <section className="w-full py-16 bg-white">
+    <section id="faq" className="w-full py-16 bg-white">
       <div className="container mx-auto text-center">
-        <p className="text-lg mb-2">Need more information? Please read our</p>
-        <h2 className="text-4xl font-bold mb-12 uppercase">FAQs</h2>
+        <p className="text-lg mb-2 font-vag text-black">Need more information? Please read our</p>
+        <h2 className="text-4xl font-arco mb-12 uppercase text-black">FAQs</h2>
         
         <div className="max-w-3xl mx-auto">
           <FAQItem question="What is Puff Dog NFT Collection?">
