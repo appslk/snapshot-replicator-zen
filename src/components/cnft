@@ -1,0 +1,168 @@
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, TransactionSignature } from '@solana/web3.js';
+import { FC, useCallback, useMemo, useState, useEffect } from 'react';
+import { notify } from "../utils/notifications";
+import useUserSOLBalanceStore from '../stores/useUserSOLBalanceStore';
+
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
+import { generateSigner, transactionBuilder, publicKey, some } from '@metaplex-foundation/umi';
+import { TokenPaymentMintArgs, fetchCandyMachine, mintV2, mplCandyMachine, safeFetchCandyGuard } from "@metaplex-foundation/mpl-candy-machine";
+import { walletAdapterIdentity } from '@metaplex-foundation/umi-signer-wallet-adapters';
+import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
+import { clusterApiUrl, PublicKey } from '@solana/web3.js';
+import * as bs58 from 'bs58';
+import { setComputeUnitLimit } from '@metaplex-foundation/mpl-toolbox';
+
+import { Keypair } from '@solana/web3.js';
+import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
+import { mplBubblegum } from '@metaplex-foundation/mpl-bubblegum';
+
+//import { createAllocTreeIx } from '@metaplex-foundation/bubblegum';
+import { mplBubblegum } from '@metaplex-foundation/mpl-bubblegum';
+
+const BUBBLEGUM_PROGRAM_ID = new PublicKey('BubblegumProgramIdHere'); // Replace with actual program ID
+
+
+export const CandyMint: FC = () => {
+    const { connection } = useConnection();
+    const wallet = useWallet();
+    const { getUserSOLBalance } = useUserSOLBalanceStore();
+    const [_itemsRedeemed, setItemsRedeemed] = useState(0);
+    const [_itemsLoaded, setTotalSupply] = useState(0);
+    const [showMintOptions, setShowMintOptions] = useState(false);
+
+    const treeKeypair = Keypair.generate();
+
+    // derive the tree's authority (PDA), owned by Bubblegum
+    const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(
+        [treeKeypair.publicKey.toBuffer()],
+        BUBBLEGUM_PROGRAM_ID,
+    );
+
+    // define the canopy depth of our tree to be created
+    const canopyDepth = 10;
+
+    ////////////// Create a tree //////////////
+/*
+    // Assume: known `payer` Keypair
+
+    // Generate a keypair for the ConcurrentMerkleTree
+    const cmtKeypair = Keypair.generate();
+
+    // Create a system instruction to allocate enough 
+    // space for the tree
+    const allocAccountIx = await createAllocTreeIx(
+        connection,
+        cmtKeypair.publicKey,
+        payer.publicKey,
+        { maxDepth, maxBufferSize },
+        canopyDepth,
+    );
+
+    // Create an SPL compression instruction to initialize
+    // the newly created ConcurrentMerkleTree
+    const initTreeIx = createInitEmptyMerkleTreeIx(
+        cmtKeypair.publicKey,
+        payer.publicKey,
+        { maxDepth, maxBufferSize }
+    );
+
+
+
+    const tx = new Transaction().add(allocAccountIx).add(initTreeIx);
+
+    await sendAndConfirmTransaction(connection, tx, [cmtKeypair, payer]);
+
+    ////////////// Create a tree //////////////
+
+
+    ////////////// Add a leaf to the tree //////////////
+
+    const newLeaf: Buffer = crypto.randomBytes(32);
+
+    // Add the new leaf to the existing tree
+    const appendIx = createAppendIx(cmtKeypair.publicKey, payer.publicKey, newLeaf);
+
+    const tx = new Transaction().add(appendIx);
+
+    await sendAndConfirmTransaction(connection, tx, [payer]);
+
+    ////////////// Add a leaf to the tree //////////////
+
+
+    ////////////// Replace a leaf in the tree, using the provided MerkleTree as an indexer //////////////
+
+    // Assume: `offChainTree` is a MerkleTree instance
+    // that has been indexing the `cmtKeypair.publicKey` transactions
+
+    // Get a new leaf
+    const newLeaf: Buffer = crypto.randomBytes(32);
+
+    // Query off-chain records for information about the leaf
+    // you wish to replace by its index in the tree
+    const leafIndex = 314;
+
+    // Replace the leaf at `leafIndex` with `newLeaf`
+    const replaceIx = createReplaceIx(
+        cmtKeypair.publicKey,
+        payer.publicKey,
+        newLeaf,
+        offChainTree.getProof(leafIndex)
+    );
+
+    const tx = new Transaction().add(replaceIx);
+
+    await sendAndConfirmTransaction(connection, tx, [payer]);
+    ////////////// Replace a leaf in the tree, using the provided MerkleTree as an indexer //////////////
+
+
+    ////////////// Replace a leaf in the tree, using a 3rd party indexer //////////////
+
+    // Get a new leaf
+    const newLeaf: Buffer = crypto.randomBytes(32);
+
+    // Query off-chain indexer for a MerkleProof
+    // possibly by executing GET request against a REST api
+    const proof = await getProofFromAnIndexer(myOldLeaf);
+
+    // Replace `myOldLeaf` with `newLeaf` at the same index in the tree
+    const replaceIx = createReplaceIx(
+        cmtKeypair.publicKey,
+        payer.publicKey,
+        newLeaf,
+        proof
+    );
+
+    const tx = new Transaction().add(replaceIx);
+
+    await sendAndConfirmTransaction(connection, tx, [payer]);
+
+    ////////////// Replace a leaf in the tree, using a 3rd party indexer //////////////
+*/
+
+
+    useEffect(() => {
+
+    }, [connection, wallet?.publicKey]);
+
+
+
+    return (
+
+        <div className="mintDetails">
+
+            <div className='others'>
+                <span className='othersT'>Price</span> 0.1 SOL
+            </div>
+            <div className='others'>
+                <span className='othersT'>Minted</span> {_itemsRedeemed}/9999
+            </div>
+        </div>
+
+    );
+};
+
+function getAssociatedTokenAddress(tokenMint: PublicKey, publicKey: PublicKey) {
+    throw new Error('Function not implemented.');
+}
+

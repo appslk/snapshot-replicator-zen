@@ -1,0 +1,385 @@
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, TransactionSignature, SystemProgram, TransactionInstruction } from '@solana/web3.js';
+import { FC, useCallback, useMemo, useState, useEffect } from 'react';
+import { notify } from "../utils/notifications";
+import useUserSOLBalanceStore from '../stores/useUserSOLBalanceStore';
+
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
+import { generateSigner, transactionBuilder, publicKey, some, keypairIdentity, sol } from '@metaplex-foundation/umi';
+import { TokenPaymentMintArgs, fetchCandyMachine, mintV2, mplCandyMachine, safeFetchCandyGuard } from "@metaplex-foundation/mpl-candy-machine";
+import { walletAdapterIdentity } from '@metaplex-foundation/umi-signer-wallet-adapters';
+import { clusterApiUrl, PublicKey, Transaction, Connection, sendAndConfirmTransaction } from '@solana/web3.js';
+import * as bs58 from 'bs58';
+import { setComputeUnitLimit } from '@metaplex-foundation/mpl-toolbox';
+import { Keypair } from '@solana/web3.js';
+import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
+import { createTree, mplBubblegum, fetchMerkleTree, fetchTreeConfigFromSeeds } from '@metaplex-foundation/mpl-bubblegum';
+import { none } from '@metaplex-foundation/umi'
+import { mintV1 } from '@metaplex-foundation/mpl-bubblegum'
+import { dasApi } from "@metaplex-foundation/digital-asset-standard-api";
+import { publicKey as UMIPublicKey } from "@metaplex-foundation/umi";
+
+import { createNft } from "@metaplex-foundation/mpl-token-metadata";
+import { createGenericFile, percentAmount } from "@metaplex-foundation/umi";
+import { findLeafAssetIdPda, LeafSchema, mintToCollectionV1, parseLeafFromMintToCollectionV1Transaction } from "@metaplex-foundation/mpl-bubblegum";
+import { transferSol, addMemo } from '@metaplex-foundation/mpl-toolbox';
+import axios from 'axios';
+import crypto from "crypto"; // Use crypto-browserify if running in the browser
+
+export const TreeBubble: FC = () => {
+
+    const { connection } = useConnection();
+    const wallet = useWallet();
+    const [_merkleTree, set_merkleTree] = useState(0);
+    const [_leafOwner, set_leafOwner] = useState(0);
+
+    const quicknodeEndpoint = process.env.NEXT_PUBLIC_HELIUS_RPC;
+    const merkleTreeLink = UMIPublicKey(process.env.NEXT_PUBLIC_MERKLETREE);
+    const tokenAddress = UMIPublicKey(process.env.NEXT_PUBLIC_TOKEN_ADDRESS);
+    const systemProgram = SystemProgram;
+
+    const [walletObject, setwalletObject] = useState(null);
+
+    const umi = useMemo(() =>
+        createUmi(quicknodeEndpoint)
+            .use(walletAdapterIdentity(wallet))
+            .use(mplTokenMetadata())
+            .use(mplBubblegum()),
+
+        [wallet, mplCandyMachine, walletAdapterIdentity, mplTokenMetadata, quicknodeEndpoint, createUmi]
+    );
+
+
+    async function createMerkleTree() {
+        try {
+            const merkleTree = generateSigner(umi);
+
+            const builder = await createTree(umi, {
+                merkleTree,
+                maxDepth: 14,
+                maxBufferSize: 64,
+                public: true
+            });
+
+            await builder.sendAndConfirm(umi);
+            console.log("Merkle Tree created:", merkleTree.publicKey.toString());
+
+            // ... other operations using merkleTree.publicKey
+        } catch (error) {
+            console.error("Error creating Merkle Tree:", error);
+            // Handle error, e.g., display a notification to the user
+        }
+    }
+
+    /*const mintNFT = async () => {
+        try {
+
+            axios.post('http://localhost:3001/api/webhook/crossmint', {
+
+
+            })
+                .then(response => {
+                    console.log('File sent successfully.');
+                    console.log(response.data);
+                })
+                .catch(error => {
+                    console.log('Error sending file.', error);
+                });
+
+
+        } catch (err) {
+            console.log(err);
+        }
+    };*/
+
+    /*async function mint() {
+        try {
+
+            await mintV1(umi, {
+                leafOwner: umi.identity.publicKey,
+                merkleTree: merkleTreeLink,
+                metadata: {
+                    name: 'My Compressed NFT',
+                    uri: 'https://aqua-labour-marmoset-544.mypinata.cloud/ipfs/bafkreie4c5vig3hi2cphklye5ichiq6xwkyntaweznieju6ge5hukqkmk4',
+                    sellerFeeBasisPoints: 500, // 5%
+                    collection: none(),
+                    creators: [
+                        { address: umi.identity.publicKey, verified: false, share: 100 },
+                    ],
+                },
+            }).sendAndConfirm(umi);
+            console.log("NFT minted successfully");
+        } catch (error) {
+            console.error("Error minting NFT:", error);
+            // Handle error, e.g., display a notification to the user
+        }
+    }*/
+
+        const mintNFT = async () => {
+            try {
+                const secret = "your-crossmint-webhook-secret"; // Replace with your secret
+                const payload = JSON.stringify({
+                    // Example payload
+                    eventType: "mint",
+                    data: { id: 1, name: "Example NFT" }
+                });
+        
+                // Generate the HMAC signature
+                const signature = crypto
+                    .createHmac("sha256", secret)
+                    .update(payload)
+                    .digest("hex");
+        
+                // Send the request with the payload and signature
+                const response = await axios.post(
+                    "http://localhost:3001/api/webhook/crossmint",
+                    payload,
+                    {
+                        headers: {
+                            "x-crossmint-signature": signature,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+        
+                console.log("File sent successfully.");
+                console.log(response.data);
+            } catch (error) {
+                console.error("Error sending file.", error);
+            }
+        };
+
+    async function mintToCollection() {
+
+        const uintSig = await transactionBuilder()
+            .add(setComputeUnitLimit(umi, { units: 800_000 }))
+            .add(await mintToCollectionV1(umi, {
+                leafOwner: umi.identity.publicKey,
+                merkleTree: merkleTreeLink,
+                collectionMint: tokenAddress,
+                metadata: {
+                    name: "NFT Testing #@",
+                    uri: "https://aqua-labour-marmoset-544.mypinata.cloud/ipfs/bafkreifefx4nwtarrfp2dvli4bwyuch23svvlxzjzhv26krputathrpb7m",
+                    sellerFeeBasisPoints: 0, // 0%
+                    collection: { key: tokenAddress, verified: false },
+                    creators: [
+                        { address: umi.identity.publicKey, verified: false, share: 100 },
+                    ],
+                },
+            }))
+
+        const { signature } = await uintSig.sendAndConfirm(umi, {
+            confirm: { commitment: "finalized" },
+        });
+
+
+
+        const txid = bs58.encode(signature);
+        console.log('success', `Mint successful! ${txid}`)
+        notify({ type: 'success', message: 'Mint successful!', txid });
+
+
+        const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
+            umi,
+            signature,
+        );
+        const assetId = findLeafAssetIdPda(umi, {
+            merkleTree: merkleTreeLink,
+            leafIndex: leaf.nonce,
+        })[0];
+
+        //https://solana.com/developers/courses/state-compression/compressed-nfts#interact-with-cnfts
+
+        console.log("asset_id : " + assetId);
+        console.log("id:", leaf.id);
+        console.log("Owner:", leaf.owner);
+        console.log("Delegate:", leaf.delegate);
+        console.log("Nonce:", leaf.nonce);
+        console.log("DataHash:", leaf.dataHash);
+        console.log("CreatorHash:", leaf.creatorHash);
+
+
+        // @ts-ignore
+        const rpcAsset = await umi.rpc.getAsset(assetId);
+        console.log(rpcAsset);
+
+    }
+
+    async function mintMultipleNFTs() {
+        try {
+            const destinationWallet = publicKey("YOUR_WALLET_ADDRESS"); // Change to the wallet address where NFTs should be sent
+    
+            for (let typeIndex = 1; typeIndex <= 28; typeIndex++) {
+                for (let nftIndex = 1; nftIndex <= 10; nftIndex++) {
+                    
+                    const nftName = `NFT Type ${typeIndex} - #${nftIndex}`;
+                    const metadataUri = "https://your-ipfs-link.com"; // Change this to the correct URI
+                    
+                    const uintSig = await transactionBuilder()
+                        .add(setComputeUnitLimit(umi, { units: 800_000 }))
+                        .add(await mintToCollectionV1(umi, {
+                            leafOwner: destinationWallet, // Send to the given wallet
+                            merkleTree: merkleTreeLink,
+                            collectionMint: tokenAddress,
+                            metadata: {
+                                name: nftName,
+                                uri: metadataUri,
+                                sellerFeeBasisPoints: 500, // 5%
+                                collection: { key: tokenAddress, verified: false },
+                                creators: [{ address: umi.identity.publicKey, verified: false, share: 100 }],
+                            },
+                        }));
+                    
+                    const { signature } = await uintSig.sendAndConfirm(umi, { confirm: { commitment: "finalized" } });
+                    const txid = bs58.encode(signature);
+                    console.log(`Minted: ${nftName} | TxID: ${txid}`);
+    
+                    notify({ type: 'success', message: `Minted ${nftName}`, txid });
+                }
+            }
+    
+            console.log("All NFTs minted successfully!");
+        } catch (error) {
+            console.error("Error minting NFTs:", error);
+            notify({ type: 'error', message: "Minting failed!", description: error.message });
+        }
+    }    
+
+    async function mintToCollectionWithPayments() {
+
+        // Fetch the current price of SOL in USD
+        const solPriceResponse = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
+        const solPriceData = await solPriceResponse.json();
+        const solPriceInUsd = solPriceData.solana.usd;
+
+        // Calculate the amount of SOL equivalent to $100
+        const amountInSol = 100 / solPriceInUsd;
+
+        const destination = publicKey(`7eLQnG9QoqdqtPbpXxQ3kSJXTTjWdGXK8SeVeHR7HnsM`)
+
+
+        // Use the instruction directly in the builder
+        const uintSig = await transactionBuilder()
+            .add(setComputeUnitLimit(umi, { units: 800_000 }))
+            .add(await mintToCollectionV1(umi, {
+                leafOwner: umi.identity.publicKey,
+                merkleTree: merkleTreeLink,
+                collectionMint: tokenAddress,
+                metadata: {
+                    name: "NFT Testing #@",
+                    uri: "https://aqua-labour-marmoset-544.mypinata.cloud/ipfs/bafkreifefx4nwtarrfp2dvli4bwyuch23svvlxzjzhv26krputathrpb7m",
+                    sellerFeeBasisPoints: 0,
+                    collection: { key: tokenAddress, verified: false },
+                    creators: [
+                        { address: umi.identity.publicKey, verified: false, share: 100 },
+                    ],
+                },
+            })).add(transferSol(umi, {
+                source: umi.identity,
+                destination,
+                amount: sol(1.3)
+            }));
+
+        console.log("Transaction sent successfully:", uintSig);
+
+        const { signature } = await uintSig.sendAndConfirm(umi, {
+            confirm: { commitment: "finalized" },
+        });
+
+        const txid = bs58.encode(signature);
+        console.log('success', `Mint successful! ${txid}`)
+        notify({ type: 'success', message: 'Mint successful!', txid });
+
+        const leaf: LeafSchema = await parseLeafFromMintToCollectionV1Transaction(
+            umi,
+            signature,
+        );
+        const assetId = findLeafAssetIdPda(umi, {
+            merkleTree: merkleTreeLink,
+            leafIndex: leaf.nonce,
+        })[0];
+
+        console.log("asset_id : " + assetId);
+        console.log("id:", leaf.id);
+        console.log("Owner:", leaf.owner);
+        console.log("Delegate:", leaf.delegate);
+        console.log("Nonce:", leaf.nonce);
+        console.log("DataHash:", leaf.dataHash);
+        console.log("CreatorHash:", leaf.creatorHash);
+
+        const rpcAsset = await umi.rpc.getAsset(assetId);
+        console.log(rpcAsset);
+    }
+
+    async function createACollection() {
+
+        const collectionMint = generateSigner(umi);
+
+        await createNft(umi, {
+            mint: collectionMint,
+            name: `Collection Testing #@`,
+            uri: 'https://aqua-labour-marmoset-544.mypinata.cloud/ipfs/bafkreiepumbrocruuvxybjz376zilfrkgwwtwbigrppxnmm4uzi4b34yte',
+            sellerFeeBasisPoints: percentAmount(0),
+            isCollection: true, // mint as collection NFT
+        }).sendAndConfirm(umi);
+
+    }
+
+    /* async function fetchData(){
+     
+         const merkleTreeAccount = await fetchMerkleTree(umi, merkleTree);
+         const treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
+     
+     
+     }*/
+
+
+    useEffect(() => {
+
+        /* const merkleTree = generateSigner(umi);
+         const leafOwner = umi.use(keypairIdentity(merkleTree)).use(mplBubblegum()).use(dasApi());
+     
+    */
+        umi.use(mplTokenMetadata());
+    }, [connection, wallet?.publicKey]);
+
+
+    return (
+
+        <div className="mintDetails">
+
+            {/*<div className='others'>
+                <button onClick={mint}>Mint</button>
+            </div>*/}
+
+            <div>
+                <div className='others'>
+                    <button onClick={createMerkleTree}>Create MerkleTree</button>
+                </div>
+
+                <div className='others'>
+                    <button onClick={createACollection}>Create Collection</button>
+                </div>
+
+                <div className='others'>
+                    <button onClick={mintToCollection}>Mint To Collection</button>
+                </div>
+            </div>
+
+            <div>
+                <div className='others'>
+                    <button onClick={mintToCollectionWithPayments}>Mint To Collection on With Payments</button>
+                </div>
+
+                <div className='others'>
+                    <button onClick={mintNFT}>Mint BTN</button>
+                </div>
+                
+            </div>
+
+        </div>
+
+    );
+};
+
+
