@@ -17,4 +17,8 @@ export default defineConfig({
       views: path.resolve(__dirname, './src/views'),
     },
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
 });
